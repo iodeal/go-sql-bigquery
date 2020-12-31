@@ -27,10 +27,10 @@ func ConfigFromConnString(in string) (*Config, error) {
 		cfg.DatasetID = fields[1]
 		cfg.ApiKey = v.Get("apiKey")
 		cfg.Credentials = v.Get("credentials")
+		cfg.CredentialsFile = v.Get("CredentialsFile")
 		return cfg, nil
-	} else {
-		// Nope, bad prefix
-		return nil, fmt.Errorf("invalid prefix, expected bigquery:// got: %s", in)
 	}
+	// Nope, bad prefix
+	return nil, fmt.Errorf("invalid prefix, expected bigquery:// got: %s", in)
 
 }

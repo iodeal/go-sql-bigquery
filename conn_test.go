@@ -1,15 +1,16 @@
 package bigquery
 
 import (
-	"cloud.google.com/go/bigquery"
 	"context"
 	"database/sql/driver"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/mock"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"cloud.google.com/go/bigquery"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/mock"
 )
 
 const (
@@ -188,73 +189,6 @@ func Test_conn_Ping(t *testing.T) {
 			c := testConn
 			if err := c.Ping(tt.args.ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Ping() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestConn_Query(t *testing.T) {
-	teardown := setupConnTests(t)
-	defer teardown(t)
-	type fields struct {
-		cfg       *Config
-		client    *bigquery.Client
-		ds        *bigquery.Dataset
-		projectID string
-		bad       bool
-		closed    bool
-		ctx       context.Context
-	}
-	type args struct {
-		query string
-		args  []driver.Value
-	}
-	tests := []struct {
-		name     string
-		fields   fields
-		args     args
-		wantRows *bqRows
-		wantErr  error
-	}{
-		{
-			name: "SELECT *",
-			args: args{
-				query: "SELECT * FROM dataset1.table1;",
-				args:  nil,
-			},
-			wantRows: &bqRows{
-				columns: []string{"name", "number"},
-				types: []string{"STRING", "INTEGER"},
-				rs: resultSet{
-					data: [][]bigquery.Value{
-						{"hello", int64(1)},
-					},
-					num: 0,
-				},
-				c: testConn,
-			},
-			wantErr: nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := testConn
-
-			gotRows, err := c.Query(tt.args.query, tt.args.args)
-			if err != nil {
-				if tt.wantErr != nil {
-					if tt.wantErr.Error() != err.Error() {
-						t.Errorf("Query() error = %v, wantErr %v", err, tt.wantErr)
-						return
-					}
-					return
-				} else {
-					t.Errorf("Query() error = %v, wantErr %v", err, tt.wantErr)
-					return
-				}
-			}
-			if !reflect.DeepEqual(gotRows, tt.wantRows) {
-				t.Errorf("Query() gotRows = %v, want %v", gotRows, tt.wantRows)
 			}
 		})
 	}
@@ -589,7 +523,7 @@ func TestConn_Prepare(t *testing.T) {
 			args: args{
 				query: "SELECT * FROM SOMETHING test = ? ;",
 			},
-			wantStmt: NewStmt("SELECT * FROM SOMETHING test = ? ;",testConn),
+			wantStmt: NewStmt("SELECT * FROM SOMETHING test = ? ;", testConn),
 			wantErr:  false,
 		},
 	}

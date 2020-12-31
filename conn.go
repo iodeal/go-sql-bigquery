@@ -1,17 +1,18 @@
 package bigquery
 
 import (
-	"cloud.google.com/go/bigquery"
 	"context"
 	"database/sql/driver"
 	"encoding/base64"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 	"reflect"
 	"strings"
 	"time"
+
+	"cloud.google.com/go/bigquery"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
 type Dataset interface {
@@ -50,11 +51,12 @@ type Dataset interface {
 }
 
 type Config struct {
-	ProjectID   string
-	Location    string
-	DatasetID   string
-	ApiKey      string
-	Credentials string
+	ProjectID       string
+	Location        string
+	DatasetID       string
+	ApiKey          string
+	Credentials     string
+	CredentialsFile string
 }
 
 type Conn struct {
@@ -174,6 +176,8 @@ func NewConn(ctx context.Context, cfg *Config) (c *Conn, err error) {
 			return nil, _err
 		}
 		c.client, err = bigquery.NewClient(ctx, cfg.ProjectID, option.WithCredentialsJSON([]byte(credentialsJSON)))
+	} else if cfg.CredentialsFile != "" {
+		c.client, err = bigquery.NewClient(ctx, cfg.ProjectID, option.WithCredentialsFile(cfg.CredentialsFile))
 	} else {
 		c.client, err = bigquery.NewClient(ctx, cfg.ProjectID)
 	}
@@ -239,31 +243,22 @@ func (c *Conn) queryContext(ctx context.Context, query string, args []driver.Val
 	q := c.client.Query(query)
 	q.DefaultProjectID = c.cfg.ProjectID // allows omitting project in table reference
 	q.DefaultDatasetID = c.cfg.DatasetID // allows omitting dataset in table reference
-	rowsIterator, err := q.Read(ctx)
+	job, err := q.Run(ctx)
 	if err != nil {
 		return nil, err
 	}
-
+	itr, err := job.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
 	res := &bqRows{
-		rs: resultSet{},
+		ri: itr,
 		c:  c,
 	}
-	for _, column := range rowsIterator.Schema {
+	for _, column := range itr.Schema {
 		res.columns = append(res.columns, column.Name)
 		res.types = append(res.types, fmt.Sprintf("%v", column.Type))
 	}
-	for {
-		var row []bigquery.Value
-		err := rowsIterator.Next(&row)
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		res.rs.data = append(res.rs.data, row)
-	}
-
 	return res, nil
 }
 

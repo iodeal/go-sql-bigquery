@@ -3,42 +3,49 @@ package bigquery
 import (
 	"context"
 	"database/sql/driver"
+
 	"github.com/sirupsen/logrus"
 )
 
-type stmt struct {
+//Stmt A query statement
+type Stmt struct {
 	query string
 	c     *Conn
 }
 
-func NewStmt(query string, c *Conn) *stmt {
-	return &stmt{query: query, c: c}
+//NewStmt New Statement
+func NewStmt(query string, c *Conn) *Stmt {
+	return &Stmt{query: query, c: c}
 }
 
-func (s *stmt) Close() error {
+//Close close Stmt
+func (s *Stmt) Close() error {
 	return nil
 }
 
-func (s *stmt) NumInput() int {
+//NumInput number of input
+func (s *Stmt) NumInput() int {
 	return -1
 }
 
-// Deprecated: Drivers should implement StmtExecContext instead (or additionally).
-func (s *stmt) Exec(args []driver.Value) (driver.Result, error) {
+//Exec Deprecated: Drivers should implement StmtExecContext instead (or additionally).
+func (s *Stmt) Exec(args []driver.Value) (driver.Result, error) {
 	logrus.Debugf("Got stmt.Exec: %s", s.query)
 	return s.c.Exec(s.query, args)
 }
 
-func (s *stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
+//ExecContext Exec with Context parameter
+func (s *Stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
 	return s.c.ExecContext(ctx, s.query, args)
 }
 
-// Deprecated: Drivers should implement StmtQueryContext instead (or additionally).
-func (s *stmt) Query(args []driver.Value) (driver.Rows, error) {
+//Query Deprecated: Drivers should implement StmtQueryContext instead (or additionally).
+func (s *Stmt) Query(args []driver.Value) (driver.Rows, error) {
 	logrus.Debugf("Got stmt.Query: %s", s.query)
 	return s.c.Query(s.query, args)
 }
 
-func (s *stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
+//QueryContext Query with Context parameter
+func (s *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
 	return s.c.QueryContext(ctx, s.query, args)
 }

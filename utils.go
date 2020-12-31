@@ -25,7 +25,7 @@ func ConfigFromConnString(in string) (*Config, error) {
 		cfg.ProjectID = u.Host
 		cfg.Location = fields[0]
 		cfg.DatasetID = fields[1]
-		cfg.ApiKey = v.Get("apiKey")
+		cfg.APIKey = v.Get("apiKey")
 		cfg.Credentials = v.Get("credentials")
 		cfg.CredentialsFile = v.Get("CredentialsFile")
 		return cfg, nil

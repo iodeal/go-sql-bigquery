@@ -15,6 +15,7 @@ import (
 	"google.golang.org/api/option"
 )
 
+//Dataset Bigquery Dataset
 type Dataset interface {
 	// Create creates a dataset in the BigQuery service. An error will be returned if the
 	// dataset already exists. Pass in a DatasetMetadata value to configure the dataset.
@@ -50,15 +51,17 @@ type Dataset interface {
 	Routines(ctx context.Context) *bigquery.RoutineIterator
 }
 
+//Config A bigquery client configuration
 type Config struct {
 	ProjectID       string
 	Location        string
 	DatasetID       string
-	ApiKey          string
+	APIKey          string
 	Credentials     string
 	CredentialsFile string
 }
 
+//Conn A connecton
 type Conn struct {
 	cfg       *Config
 	client    *bigquery.Client
@@ -117,11 +120,12 @@ func prepareQuery(query string, args []driver.Value) (out string, err error) {
 	return
 }
 
-// Deprecated: Drivers should implement ExecerContext instead.
+//Exec Deprecated: Drivers should implement ExecerContext instead.
 func (c *Conn) Exec(query string, args []driver.Value) (res driver.Result, err error) {
 	return c.execContext(context.Background(), query, args)
 }
 
+//ExecContext Execute with Context parameter
 func (c *Conn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	_args, err := namedValueToValue(args)
 	if err != nil {
@@ -168,8 +172,8 @@ func NewConn(ctx context.Context, cfg *Config) (c *Conn, err error) {
 	c = &Conn{
 		cfg: cfg,
 	}
-	if cfg.ApiKey != "" {
-		c.client, err = bigquery.NewClient(ctx, cfg.ProjectID, option.WithAPIKey(cfg.ApiKey))
+	if cfg.APIKey != "" {
+		c.client, err = bigquery.NewClient(ctx, cfg.ProjectID, option.WithAPIKey(cfg.APIKey))
 	} else if cfg.Credentials != "" {
 		credentialsJSON, _err := base64.StdEncoding.DecodeString(cfg.Credentials)
 		if _err != nil {
@@ -189,16 +193,19 @@ func NewConn(ctx context.Context, cfg *Config) (c *Conn, err error) {
 	return
 }
 
+//Connector Connector struct
 type Connector struct {
 	Info             map[string]string
 	Client           *bigquery.Client
 	connectionString string
 }
 
+//NewConnector Create a new Connector
 func NewConnector(connectionString string) *Connector {
 	return &Connector{connectionString: connectionString}
 }
 
+//Connect Connect the server
 func (c *Connector) Connect(ctx context.Context) (driver.Conn, error) {
 	cfg, err := ConfigFromConnString(c.connectionString)
 	if err != nil {
@@ -207,11 +214,12 @@ func (c *Connector) Connect(ctx context.Context) (driver.Conn, error) {
 	return NewConn(ctx, cfg)
 }
 
+//Driver Get the Connector Driver
 func (c *Connector) Driver() driver.Driver {
 	return &Driver{}
 }
 
-// Ping the BigQuery service and make sure it's reachable
+//Ping the BigQuery service and make sure it's reachable
 func (c *Conn) Ping(ctx context.Context) (err error) {
 	if c.ds == nil {
 		c.ds = c.client.Dataset(c.cfg.DatasetID)
@@ -226,11 +234,12 @@ func (c *Conn) Ping(ctx context.Context) (err error) {
 	return
 }
 
-// Deprecated: Drivers should implement QueryerContext instead.
+//Query Deprecated: Drivers should implement QueryerContext instead.
 func (c *Conn) Query(query string, args []driver.Value) (rows driver.Rows, err error) {
 	return c.queryContext(context.Background(), query, args)
 }
 
+//QueryContext Query with Context parameter
 func (c *Conn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	_args, err := namedValueToValue(args)
 	if err != nil {
@@ -262,18 +271,18 @@ func (c *Conn) queryContext(ctx context.Context, query string, args []driver.Val
 	return res, nil
 }
 
-// Prepare is stubbed out and not used
+//Prepare Prepare is stubbed out and not used
 func (c *Conn) Prepare(query string) (stmt driver.Stmt, err error) {
 	stmt = NewStmt(query, c)
 	return
 }
 
-// Begin  is stubbed out and not used
+//Begin Begin  is stubbed out and not used
 func (c *Conn) Begin() (driver.Tx, error) {
 	return newTx(c)
 }
 
-// Close closes the connection
+//Close Close closes the connection
 func (c *Conn) Close() (err error) {
 	if c.closed {
 		return nil

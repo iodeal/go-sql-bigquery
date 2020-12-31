@@ -16,9 +16,11 @@ As this is using the Google Cloud Go SDK, you will need to have your credentials
 via the GOOGLE_APPLICATION_CREDENTIALS environment variable point to your credential JSON file.
 
 Alternatively, you can specify `apiKey` connection string parameter with API key value,
+or `CredentialsFile` parameter with Credentials File(json format) Local Path
 or `credentials` parameter with base-64 encoded service account or refresh token JSON credentials as the value.  
 Connection string examples:  
 ```js
+"bigquery://projectid/location/dataset?CredentialsFile=/path/filename.json"
 "bigquery://projectid/location/dataset?apiKey=AIzaSyB6XK8IO5AzKZXoioQOVNTFYzbDBjY5hy4"
 "bigquery://projectid/location/dataset?credentials=eyJ0eXBlIjoiYXV0..."
 ```
@@ -32,44 +34,33 @@ package main
 
 import (
     "database/sql"
-    _ "github.com/solcates/go-sql-bigquery"
+    _ "github.com/iodeal/go-sql-bigquery"
     "log"
 )
 
 func main() {
-    db, err := sql.Open("bigquery", 
-        "bigquery://projectid/location/dataset")
+    config := "bigquery://{project_id}/{location}/{dataset_id}?CredentialsFile={Local Credentials File Path}"
+    db, err := sql.Open("bigquery", config)
     if err != nil {
         log.Fatal(err)
     }
     defer db.Close() 
-    // Do Something with the DB
-
-}
-```
-
-## Gorm Usage
-
-For gorm
-
-```go
-package main
-
-import (
-    "github.com/jinzhu/gorm"
-    _ "github.com/solcates/go-sql-bigquery/dialects/bigquery"
-    "log"
-)
-
-func main() {
-    db, err := gorm.Open("bigquery", 
-        "bigquery://projectid/location/dataset")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close() 
-    // Do Something with the DB
-
+    var rs string
+	err = db.QueryRow("select 'query row' msg").Scan(&rs)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(rs)
+	rows, err := db.Query("select 1 union all select 2 union all select 3")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer rows.Close()
+	var cnt int
+	for rows.Next() {
+		err = rows.Scan(&cnt)
+		fmt.Println(cnt)
+	}
 }
 ```
 
@@ -84,6 +75,5 @@ Pull Requests are welcome!
 * [x] driver.Conn implemented
 * [x] driver.Querier implemented
 * [x] driver.Pinger implemented
-* [x] gorm Dialect - have only tested basic use cases
 * [x] Prepared Statements - supported via a quick hack
 * [ ] Parametiterized Queries

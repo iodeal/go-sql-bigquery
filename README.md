@@ -6,10 +6,6 @@ This is an implementation of the BigQuery Client as a database/sql/driver for ea
 This project is meant to be a basic database/sql driver implementation for Golang so that developers can easily use 
 tools like Gorm, and *sql.DB functions, with Google's BigQuery database.
 
-# Usage
-
-Check out the example application in the `examples` directory, for a few examples.
-
 # Authentication
 
 As this is using the Google Cloud Go SDK, you will need to have your credentials available

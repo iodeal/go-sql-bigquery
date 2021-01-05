@@ -1,11 +1,6 @@
 #  BigQuery SQL Driver for Golang
 This is an implementation of the BigQuery Client as a database/sql/driver for easy integration and usage.
 
-# Goals of project
-
-This project is meant to be a basic database/sql driver implementation for Golang so that developers can easily use 
-tools like Gorm, and *sql.DB functions, with Google's BigQuery database.
-
 # Authentication
 
 As this is using the Google Cloud Go SDK, you will need to have your credentials available
@@ -19,6 +14,13 @@ Connection string examples:
 "bigquery://projectid/location/dataset?CredentialsFile=/path/filename.json"
 "bigquery://projectid/location/dataset?apiKey=AIzaSyB6XK8IO5AzKZXoioQOVNTFYzbDBjY5hy4"
 "bigquery://projectid/location/dataset?credentials=eyJ0eXBlIjoiYXV0..."
+```
+
+## Installation
+Simple install the package to your $GOPATH with the go tool from shell: 
+
+```go
+go get -u github.com/iodeal/go-sql-bigquery
 ```
 
 ## Vanilla *sql.DB usage
@@ -62,14 +64,3 @@ func main() {
 
 
 # Contribution
-
-Pull Requests are welcome!  
-
-
-# Current Support
-
-* [x] driver.Conn implemented
-* [x] driver.Querier implemented
-* [x] driver.Pinger implemented
-* [x] Prepared Statements - supported via a quick hack
-* [ ] Parametiterized Queries
